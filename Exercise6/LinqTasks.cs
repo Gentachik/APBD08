@@ -291,7 +291,13 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<object> Task11()
         {
-            IEnumerable<object> result = null;
+            IEnumerable<object> result = Emps
+                .GroupBy(e => e.Deptno)
+                .Where(e => e.Count() > 1)
+                .Join(Depts,
+                    e => e.Key,
+                    d => d.Deptno,
+                    (e, d) => new { name = d.Dname, numOfEmployees = e.Count() });
             return result;
         }
 
@@ -304,7 +310,9 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<Emp> Task12()
         {
-            IEnumerable<Emp> result = null;
+            IEnumerable<Emp> result = Emps.GetEmpWithSubordinates()
+                .OrderBy(e => e.Ename.Split(' ')[0])
+                .ThenByDescending(e => e.Salary);
             return result;
         }
 
@@ -317,8 +325,10 @@ namespace Exercise6
         /// </summary>
         public static int Task13(int[] arr)
         {
-            int result = 0;
-            //result=
+            int result = arr.GroupBy(n => n) 
+                .Where(n => n.Count() % 2 != 0) 
+                .Select(n => n.Key)
+                .First();;
             return result;
         }
 
@@ -328,14 +338,30 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<Dept> Task14()
         {
-            IEnumerable<Dept> result = null;
-            //result =
+            IEnumerable<Dept> result =Depts.GroupJoin(
+                    Emps,
+                    d => d.Deptno,
+                    e => e.Deptno,
+                    (d, e) => new { Dept = d, EmployeeCount = e.Count() })
+                .Where(d => d.EmployeeCount == 5 || d.EmployeeCount == 0)
+                .OrderBy(d => d.Dept.Dname) 
+                .Select(d => d.Dept);
             return result;
         }
     }
 
     public static class CustomExtensionMethods
     {
-        //Put your extension methods here
+        /// <summary>
+        /// Write your own extension method that will allow the following code snippet to compile.
+        /// Add the method to the CustomExtensionMethods class, which is defined below.
+        ///
+        /// The method should return only those employees who have at least 1 direct subordinate.
+        /// Employees should be sorted within the collection by surname (ascending) and salary (descending).
+        /// </summary>
+        public static IEnumerable<Emp> GetEmpWithSubordinates(this IEnumerable<Emp> emps)
+        {
+            return emps.Where(emp => emps.Any(e => e.Mgr != null && e.Mgr.Empno == emp.Empno));
+        }
     }
 }
